@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECHO partners by HIP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<style>
+:root { --red: #C41E3A; --blue: #0071BC; --fg: #1f2933; --muted: #5f6b7a; --line: #d9dee5; --panel: #fff; --bg: #f4f6f9; --grey: #c9d1db; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: Roboto, Arial, sans-serif; font-size: 14px; line-height: 1.35; }
+.ep { display: grid; gap: 10px; max-width: 1400px; margin: 0 auto; padding: 12px; }
+p { margin: 0; }
+.head { background: var(--red); color: #fff; border-radius: 6px; padding: 10px 14px; }
+.head h1 { font-size: 1.3rem; margin: 0; }
+.head .take { margin-top: 4px; }
+.head .stamp { margin-top: 4px; font-size: 12px; opacity: .9; }
+h2 { font-size: 14px; color: var(--blue); margin: 0 0 2px; }
+.note { color: var(--muted); font-size: 12px; }
+.filters { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: end; padding: 8px 10px; background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 6px; }
+.filters label { display: grid; gap: 1px; font-size: 12px; color: var(--muted); }
+.filters select, .filters button, .tablebar input { font: inherit; font-size: 13px; color: var(--fg); background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; max-width: 100%; }
+.filters button { cursor: pointer; border-color: var(--red); color: var(--red); font-weight: 700; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); gap: 8px; }
+.tile { background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--blue); border-radius: 6px; padding: 6px 10px; }
+.tile.hl { border-top-color: var(--red); }
+.tile .lab { font-size: 12px; color: var(--muted); }
+.tile .num { font-weight: 700; font-size: 1.35rem; color: var(--blue); font-variant-numeric: tabular-nums; }
+.tile.hl .num { color: var(--red); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 8px; }
+.chart { position: relative; min-height: 170px; margin-top: 4px; }
+.chart svg text { font-family: inherit; font-size: 12px; }
+.tip { position: absolute; pointer-events: none; background: #fff; border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,.12); padding: 4px 8px; font-size: 12px; white-space: nowrap; z-index: 3; }
+.tip .k { color: var(--muted); }
+.tablebar { display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; align-items: center; margin: 4px 0 6px; }
+.tablebar input { min-width: min(100%, 16rem); }
+.tablewrap { max-height: 560px; overflow: auto; border: 1px solid var(--line); border-radius: 4px; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+th { position: sticky; top: 0; background: var(--blue); color: #fff; text-align: left; padding: 4px 6px; vertical-align: bottom; z-index: 1; }
+th button { all: unset; cursor: pointer; font-weight: 700; }
+th[aria-sort="descending"] button::after { content: " ↓"; }
+th[aria-sort="ascending"] button::after { content: " ↑"; }
+td { padding: 3px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tbody tr:nth-child(even) td { background: rgba(0, 113, 188, .16); }
+tbody tr:hover td { background: rgba(0, 113, 188, .28); }
+td.n, th.n { text-align: right; white-space: nowrap; }
+td.fam { font-weight: 700; }
+td.wrap { min-width: 11rem; }
+.bar { display: block; height: 3px; border-radius: 2px; background: var(--grey); margin-top: 2px; }
+.bar > span { display: block; height: 100%; border-radius: 2px; background: var(--blue); }
+@media (max-width: 700px) { .hide-n { display: none; } }
+details summary { cursor: pointer; font-weight: 700; color: var(--blue); font-size: 13px; }
+ul { margin: 4px 0 0; padding-left: 1.2em; }
+li { margin-bottom: 2px; }
+a { color: var(--blue); }
+</style>
+</head>
+<body>
+<div class="ep">
+  <header class="head">
+    <h1>ECHO partners by HIP</h1>
+    <p class="take" id="take">Loading…</p>
+    <p class="stamp" id="stamp"></p>
+  </header>
+
+  <div class="filters">
+    <label>HIP <select id="f-hip"></select></label>
+    <label>Partner type <select id="f-cat"><option value="">All types</option><option>NGO</option><option>UN / multilateral</option><option>Red Cross / Red Crescent</option><option value="Redacted">Name redacted by ECHO</option></select></label>
+    <label>Sector tag <select id="f-sector"><option value="">All sector tags</option></select></label>
+    <label>Years funded <select id="f-min"><option value="1">Any</option><option value="2">2 or 3 of 3 years</option><option value="3">All 3 years</option></select></label>
+    <button id="reset" type="button">Reset</button>
+  </div>
+
+  <section class="tiles">
+    <div class="tile"><div class="lab">Grants</div><div class="num" id="k-grants">–</div></div>
+    <div class="tile"><div class="lab">Partner organisations</div><div class="num" id="k-partners">–</div></div>
+    <div class="tile hl"><div class="lab">Funded all 3 years</div><div class="num" id="k-all3">–</div></div>
+    <div class="tile"><div class="lab">Committed (visible in IATI)</div><div class="num" id="k-eur">–</div></div>
+    <div class="tile"><div class="lab" id="k-cov-lab">Share of HIP budget visible</div><div class="num" id="k-cov">–</div></div>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>How much of the HIP budget IATI shows</h2>
+      <p class="note">HIP budget (grey) against ECHO commitments visible in IATI (blue), by year. Treat partner rankings with care where coverage is low.</p>
+      <div class="chart" id="c-cov"></div>
+    </section>
+    <section class="card">
+      <h2>Grants by ECHO sector tag</h2>
+      <p class="note">Grants carrying each tag in the selected HIP. A grant can carry several tags. ECHO has no cash or MPC tag; Food and Shelter are the likeliest homes for cash. Click a bar to filter.</p>
+      <div class="chart" id="c-sec"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Who ECHO funds, and how consistently</h2>
+    <p class="note">One row per partner organisation (national affiliates grouped, e.g. ACF France and ACF Spain). Amounts are ECHO commitments under the selected HIP. Type, sector and years filters apply here.</p>
+    <div class="tablebar">
+      <span class="note"><span id="t-count">–</span> partners shown · <a href="data/grants.json" download>Download grant data (JSON)</a></span>
+      <input id="search" type="search" placeholder="Search partner, sector or country" aria-label="Search partners">
+    </div>
+    <div class="tablewrap"><table><thead><tr id="thead"></tr></thead><tbody id="tbody"></tbody></table></div>
+  </section>
+
+  <section class="card">
+    <details><summary>About the data</summary>
+    <ul class="note">
+      <li>Source: DG ECHO's IATI publication (reporting org XI-IATI-EC_ECHO) via <a href="https://d-portal.org">d-portal.org</a>: every grant whose ID sits under one of the last three HIP years. HIP budgets: latest amounts on <a href="https://civil-protection-humanitarian-aid.ec.europa.eu/funding-evaluations/funding-humanitarian-aid/financing-decisions-hips_en">DG ECHO's HIP pages</a>.</li>
+      <li>Refreshed automatically on the 3rd of each month by a GitHub Action. ECHO publishes commitments at signature only, no disbursements, and its feed lags by months, so the latest year is always incomplete.</li>
+      <li>Coverage varies a lot by HIP: some show almost the whole budget, others under half. Missing money is most likely larger UN and programmatic-partnership grants, but the data doesn't say.</li>
+      <li>Partners are ECHO's direct partners; sub-grantees and local partners are not published. Some partner names are redacted by ECHO. Affiliates are grouped by name matching, so check unusual cases.</li>
+      <li>Sector tags are ECHO's own (vocabulary 98), counted per grant, not split by value. Prepared for CALP Network.</li>
+    </ul>
+    </details>
+  </section>
+</div>
+
+<script>
+const eurFmt = new Intl.NumberFormat('en', {notation: 'compact', maximumFractionDigits: 1});
+const eur = (v) => (v ? '€' + eurFmt.format(v) : '–');
+const num = d3.format(',');
+const pct = d3.format('.0%');
+const BLUE = '#0071BC', RED = '#C41E3A', GREY = '#c9d1db';
+const state = {hip: '-AF', cat: '', sector: '', min: 1, q: '', sort: {key: 'total', dir: -1}};
+let G = [], T = [], META = {}, YEARS = [], P = [];
+
+function partnersFor(hip) {
+  const allH = new Map(), acc = new Map();
+  for (const g of G) {
+    if (!allH.has(g.family)) allH.set(g.family, new Set());
+    allH.get(g.family).add(g.hip_name);
+    if (hip !== 'ALL' && g.hip !== hip) continue;
+    if (!acc.has(g.family)) acc.set(g.family, {family: g.family, type: g.category, byYear: {}, total: 0, grants: 0, sec: {}, cs: new Set()});
+    const r = acc.get(g.family);
+    r.byYear[g.year] = (r.byYear[g.year] || 0) + g.eur; r.total += g.eur; r.grants += 1;
+    g.countries.split(',').filter(Boolean).forEach((c) => r.cs.add(c));
+    g.sectors.split('|').filter(Boolean).forEach((s) => { r.sec[s] = (r.sec[s] || 0) + 1; });
+  }
+  return [...acc.values()].map((r) => {
+    const ys = YEARS.filter((y) => r.byYear[y]);
+    return {...r, years: ys.length, years_list: ys.join(', '),
+      sectors: Object.entries(r.sec).sort((a, b) => b[1] - a[1]).map((x) => x[0]).join(', '),
+      countries: [...r.cs].sort().join(', '), all_hips: [...allH.get(r.family)].sort().join('; ')};
+  });
+}
+
+function coverage(hip) {
+  const rows = YEARS.map((y) => {
+    const tot = T.filter((t) => t.year === y && (hip === 'ALL' || t.hip === hip));
+    const codes = new Set(tot.map((t) => t.hip));
+    const iati = d3.sum(G.filter((g) => g.year === y && codes.has(g.hip)), (g) => g.eur);
+    const budget = d3.sum(tot, (t) => t.hip_total_eur);
+    return {year: y, iati, budget, share: budget ? iati / budget : null};
+  });
+  return rows;
+}
+
+function render() {
+  const hip = state.hip;
+  const hipName = hip === 'ALL' ? 'All HIPs' : (G.find((g) => g.hip === hip) || {}).hip_name || hip;
+  const grants = G.filter((g) => hip === 'ALL' || g.hip === hip);
+  P = partnersFor(hip);
+  const all3 = P.filter((p) => p.years === YEARS.length);
+  const cov = coverage(hip);
+  const full = cov.slice(0, -1);
+  const fullShare = d3.sum(full, (r) => r.budget) ? d3.sum(full, (r) => r.iati) / d3.sum(full, (r) => r.budget) : null;
+
+  const top = all3.filter((p) => p.type !== 'Redacted').sort((a, b) => b.total - a.total).slice(0, 5);
+  document.getElementById('take').textContent = `${hipName}: ${num(all3.length)} of ${num(P.length)} partner organisations received ECHO grants in all three years (${YEARS[0]}–${YEARS[YEARS.length - 1]}). ` +
+    (top.length ? `Largest of these: ${top.map((p) => `${p.family} (${eur(p.total)})`).join(', ')}.` : 'None yet – the latest year may not be published.');
+  document.getElementById('k-grants').textContent = num(grants.length);
+  document.getElementById('k-partners').textContent = num(P.length);
+  document.getElementById('k-all3').textContent = num(all3.length);
+  document.getElementById('k-eur').textContent = eur(d3.sum(grants, (g) => g.eur));
+  document.getElementById('k-cov-lab').textContent = `Share of HIP budget visible, ${full[0].year}–${full[full.length - 1].year}`;
+  document.getElementById('k-cov').textContent = fullShare == null ? '–' : pct(fullShare);
+
+  drawCoverage(cov);
+  drawSectors(grants);
+  drawTable();
+}
+
+function drawTable() {
+  const q = state.q.trim().toLowerCase();
+  const {key, dir} = state.sort;
+  const rows = P.filter((p) => (!state.cat || p.type === state.cat) && p.years >= state.min && (!state.sector || p.sectors.split(', ').includes(state.sector)))
+    .filter((p) => !q || [p.family, p.sectors, p.countries, p.all_hips, p.type].join(' ').toLowerCase().includes(q))
+    .sort((a, b) => {
+      const x = key.startsWith('y') ? (a.byYear[key.slice(1)] || 0) : a[key], y = key.startsWith('y') ? (b.byYear[key.slice(1)] || 0) : b[key];
+      return (typeof x === 'number' ? x - y : String(x).localeCompare(String(y))) * dir;
+    });
+  document.getElementById('t-count').textContent = num(rows.length);
+  const max = d3.max(rows, (r) => r.total) || 1;
+  const tb = document.getElementById('tbody');
+  tb.replaceChildren(...rows.map((p) => {
+    const tr = document.createElement('tr');
+    const td = (text, cls) => { const c = document.createElement('td'); if (cls) c.className = cls; c.textContent = text; tr.appendChild(c); return c; };
+    td(p.family, 'fam'); td(p.type, 'hide-n'); td(p.years_list);
+    YEARS.forEach((y) => td(eur(p.byYear[y]), 'n'));
+    const t = td(eur(p.total), 'n');
+    const bar = document.createElement('span'); bar.className = 'bar';
+    const fill = document.createElement('span'); fill.style.width = (100 * p.total / max).toFixed(1) + '%';
+    bar.appendChild(fill); t.appendChild(bar);
+    td(num(p.grants), 'n hide-n');
+    const secs = p.sectors.split(', ').filter(Boolean);
+    const sc = td(secs.slice(0, 4).join(', ') + (secs.length > 4 ? ` +${secs.length - 4}` : ''), 'wrap'); sc.title = p.sectors;
+    td(p.countries, 'hide-n');
+    const hs = p.all_hips.split('; ').filter(Boolean);
+    const hc = td(hs.length === 1 ? hs[0] : `${hs.length} HIPs`, 'hide-n'); hc.title = p.all_hips; hc.style.cursor = 'help';
+    return tr;
+  }));
+}
+
+function buildHeader() {
+  const latest = YEARS[YEARS.length - 1];
+  const cols = [['family', 'Partner'], ['type', 'Type', 'hide-n'], ['years', 'Years funded'],
+    ...YEARS.map((y) => ['y' + y, y === latest ? `${y} (partial)` : String(y), 'n']),
+    ['total', 'Total', 'n'], ['grants', 'Grants', 'n hide-n'], ['sectors', 'Top sector tags', 'wrap'],
+    ['countries', 'Countries', 'hide-n'], ['all_hips', 'HIPs funded under (hover)', 'hide-n']];
+  const tr = document.getElementById('thead');
+  tr.replaceChildren(...cols.map(([k, label, cls]) => {
+    const th = document.createElement('th'); if (cls) th.className = cls;
+    if (k === state.sort.key) th.setAttribute('aria-sort', 'descending');
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
+    b.onclick = () => {
+      const text = ['family', 'type', 'sectors', 'countries', 'all_hips'].includes(k);
+      state.sort = {key: k, dir: state.sort.key === k ? -state.sort.dir : (text ? 1 : -1)};
+      tr.querySelectorAll('th').forEach((h) => h.removeAttribute('aria-sort'));
+      th.setAttribute('aria-sort', state.sort.dir === 1 ? 'ascending' : 'descending');
+      drawTable();
+    };
+    th.appendChild(b); return th;
+  }));
+}
+
+function tipFor(el) { let t = el.querySelector('.tip'); if (!t) { t = document.createElement('div'); t.className = 'tip'; t.hidden = true; el.appendChild(t); } return t; }
+function showTip(el, ev, lines) {
+  const tip = tipFor(el);
+  tip.replaceChildren(...lines.map(([k, v], i) => { const d = document.createElement('div'); if (i === 0) d.className = 'k'; d.textContent = v == null ? k : `${k}: ${v}`; return d; }));
+  tip.hidden = false;
+  const b = el.getBoundingClientRect();
+  const x = Math.min(ev.clientX - b.left + 12, el.clientWidth - tip.offsetWidth - 4);
+  tip.style.left = Math.max(0, x) + 'px'; tip.style.top = (ev.clientY - b.top + 12) + 'px';
+}
+
+function drawCoverage(rows) {
+  const el = document.getElementById('c-cov');
+  const W = el.clientWidth || 360, H = 170, m = {t: 16, r: 8, b: 22, l: 8};
+  const latest = YEARS[YEARS.length - 1];
+  const x = d3.scaleBand(rows.map((r) => r.year), [m.l, W - m.r]).padding(0.35);
+  const y = d3.scaleLinear([0, d3.max(rows, (r) => Math.max(r.budget, r.iati)) || 1], [H - m.b, m.t]);
+  const svg = d3.create('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+  svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.year)).attr('width', x.bandwidth()).attr('y', (r) => y(r.budget)).attr('height', (r) => y(0) - y(r.budget)).attr('rx', 3).attr('fill', GREY);
+  svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.year) + x.bandwidth() * 0.2).attr('width', x.bandwidth() * 0.6).attr('y', (r) => y(r.iati)).attr('height', (r) => y(0) - y(r.iati)).attr('rx', 3).attr('fill', BLUE);
+  svg.append('g').selectAll('text').data(rows).join('text').attr('x', (r) => x(r.year) + x.bandwidth() / 2).attr('y', (r) => y(Math.max(r.budget, r.iati)) - 4).attr('text-anchor', 'middle').attr('fill', '#1f2933').text((r) => (r.share != null ? pct(r.share) : '–'));
+  svg.append('g').selectAll('text').data(rows).join('text').attr('x', (r) => x(r.year) + x.bandwidth() / 2).attr('y', H - 6).attr('text-anchor', 'middle').attr('fill', '#5f6b7a').text((r) => (r.year === latest ? `${r.year} (partial)` : r.year));
+  svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.year)).attr('width', x.bandwidth()).attr('y', m.t).attr('height', H - m.b - m.t).attr('fill', 'transparent')
+    .on('mousemove', (ev, r) => showTip(el, ev, [[String(r.year)], ['HIP budget', eur(r.budget)], ['In IATI', eur(r.iati)], ['Share', r.share != null ? pct(r.share) : '–']]))
+    .on('mouseleave', () => { tipFor(el).hidden = true; });
+  el.replaceChildren(svg.node());
+}
+
+function drawSectors(grants) {
+  const el = document.getElementById('c-sec');
+  const m = new Map();
+  for (const g of grants) for (const s of g.sectors.split('|').filter(Boolean)) {
+    if (!m.has(s)) m.set(s, {sector: s, grants: 0, fams: new Set()});
+    const r = m.get(s); r.grants += 1; r.fams.add(g.family);
+  }
+  const rows = [...m.values()].sort((a, b) => b.grants - a.grants);
+  const W = el.clientWidth || 360, H = Math.max(110, rows.length * 15 + 6);
+  const svg = d3.create('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+  el.replaceChildren(svg.node());
+  const probe = svg.append('text'); let lw = 0;
+  rows.forEach((r) => { probe.text(r.sector); lw = Math.max(lw, probe.node().getComputedTextLength()); }); probe.remove();
+  lw = Math.min(lw + 8, W * 0.45);
+  const x = d3.scaleLinear([0, d3.max(rows, (r) => r.grants) || 1], [lw, W - 40]);
+  const y = d3.scaleBand(rows.map((r) => r.sector), [3, H - 3]).padding(0.2);
+  svg.append('g').selectAll('text').data(rows).join('text').attr('x', lw - 6).attr('y', (r) => y(r.sector) + y.bandwidth() / 2).attr('dy', '0.35em').attr('text-anchor', 'end').attr('fill', '#1f2933').text((r) => r.sector);
+  svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', lw).attr('y', (r) => y(r.sector)).attr('height', y.bandwidth()).attr('width', (r) => x(r.grants) - lw).attr('rx', 3).style('cursor', 'pointer')
+    .attr('fill', (r) => (!state.sector ? BLUE : r.sector === state.sector ? RED : GREY))
+    .on('click', (ev, r) => { state.sector = state.sector === r.sector ? '' : r.sector; document.getElementById('f-sector').value = state.sector; render(); })
+    .on('mousemove', (ev, r) => showTip(el, ev, [[r.sector], ['Grants', num(r.grants)], ['Partner organisations', num(r.fams.size)]]))
+    .on('mouseleave', () => { tipFor(el).hidden = true; });
+  svg.append('g').selectAll('text.v').data(rows).join('text').attr('x', (r) => x(r.grants) + 4).attr('y', (r) => y(r.sector) + y.bandwidth() / 2).attr('dy', '0.35em').attr('fill', '#5f6b7a').text((r) => num(r.grants));
+}
+
+Promise.all(['data/grants.json', 'data/hip_totals.json', 'data/meta.json'].map((u) => fetch(u).then((r) => r.json()))).then(([g, t, meta]) => {
+  G = g.map((x) => ({...x, year: Number(x.year), eur: Number(x.eur), sectors: x.sectors || '', countries: x.countries || ''}));
+  T = t.map((x) => ({...x, year: Number(x.year), hip_total_eur: Number(x.hip_total_eur)}));
+  META = meta; YEARS = (meta.years || [...new Set(G.map((x) => x.year))].sort()).map(Number);
+  document.getElementById('stamp').textContent = `Data pulled ${meta.pulled}; newest ECHO commitment in IATI ${meta.latest_commitment}.`;
+  const hips = d3.rollups(G, (v) => d3.sum(v, (x) => x.eur), (x) => x.hip).sort((a, b) => b[1] - a[1]);
+  const fh = document.getElementById('f-hip');
+  fh.replaceChildren(new Option('All HIPs', 'ALL'), ...hips.map(([h]) => new Option(G.find((x) => x.hip === h).hip_name, h)));
+  const fromHash = new URLSearchParams(location.hash.slice(1)).get('hip');
+  state.hip = fromHash && hips.some(([h]) => h === fromHash) ? fromHash : (hips.some(([h]) => h === '-AF') ? '-AF' : 'ALL');
+  fh.value = state.hip;
+  const secs = d3.rollups(G.flatMap((x) => x.sectors.split('|').filter(Boolean)), (v) => v.length, (s) => s).sort((a, b) => b[1] - a[1]);
+  document.getElementById('f-sector').append(...secs.map(([s]) => new Option(s, s)));
+  fh.onchange = () => { state.hip = fh.value; history.replaceState(null, '', '#hip=' + encodeURIComponent(state.hip)); render(); };
+  document.getElementById('f-cat').onchange = (e) => { state.cat = e.target.value; drawTable(); };
+  document.getElementById('f-sector').onchange = (e) => { state.sector = e.target.value; render(); };
+  document.getElementById('f-min').onchange = (e) => { state.min = Number(e.target.value); drawTable(); };
+  document.getElementById('search').oninput = (e) => { state.q = e.target.value; drawTable(); };
+  document.getElementById('reset').onclick = () => {
+    Object.assign(state, {cat: '', sector: '', min: 1, q: ''});
+    ['f-cat', 'f-sector', 'search'].forEach((id) => { document.getElementById(id).value = ''; });
+    document.getElementById('f-min').value = '1'; render();
+  };
+  buildHeader(); render();
+  let w = window.innerWidth; window.addEventListener('resize', () => { if (window.innerWidth !== w) { w = window.innerWidth; render(); } });
+}).catch((e) => { document.getElementById('take').textContent = 'Could not load the data: ' + e.message; });
+</script>
+</body>
+</html>

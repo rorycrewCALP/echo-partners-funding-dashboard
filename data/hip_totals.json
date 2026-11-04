@@ -1,0 +1,326 @@
+[
+{
+"hip": "-AS",
+"hip_name": "Afghanistan, Pakistan, Iran",
+"year": 2024,
+"hip_total_eur": 187064903
+},
+{
+"hip": "DRF",
+"hip_name": "Emergency Toolbox",
+"year": 2024,
+"hip_total_eur": 50500000
+},
+{
+"hip": "ERC",
+"hip_name": "Strategic Priorities / Enhanced Response Capacity",
+"year": 2024,
+"hip_total_eur": 31566586
+},
+{
+"hip": "HRC",
+"hip_name": "European Humanitarian Response Capacity",
+"year": 2024,
+"hip_total_eur": 56000000
+},
+{
+"hip": "COD",
+"hip_name": "Great Lakes",
+"year": 2024,
+"hip_total_eur": 110683339
+},
+{
+"hip": "-HF",
+"hip_name": "Greater Horn of Africa",
+"year": 2024,
+"hip_total_eur": 477788699
+},
+{
+"hip": "IRQ",
+"hip_name": "Iraq",
+"year": 2024,
+"hip_total_eur": 23040600
+},
+{
+"hip": "-AM",
+"hip_name": "Latin America and Caribbean",
+"year": 2024,
+"hip_total_eur": 165386183
+},
+{
+"hip": "-NF",
+"hip_name": "North Africa",
+"year": 2024,
+"hip_total_eur": 21000000
+},
+{
+"hip": "PSE",
+"hip_name": "Palestine",
+"year": 2024,
+"hip_total_eur": 237034709
+},
+{
+"hip": "-XA",
+"hip_name": "South, East, SE Asia and Pacific",
+"year": 2024,
+"hip_total_eur": 95709768
+},
+{
+"hip": "-SF",
+"hip_name": "Southern Africa and Indian Ocean",
+"year": 2024,
+"hip_total_eur": 65050868
+},
+{
+"hip": "SSC",
+"hip_name": "Strategic supply chain",
+"year": 2024,
+"hip_total_eur": 6950400
+},
+{
+"hip": "SYR",
+"hip_name": "Syria regional and Lebanon",
+"year": 2024,
+"hip_total_eur": 268484481
+},
+{
+"hip": "TUR",
+"hip_name": "Türkiye, Caucasus, C. Asia, Balkans",
+"year": 2024,
+"hip_total_eur": 26000000
+},
+{
+"hip": "UKR",
+"hip_name": "Ukraine and Moldova",
+"year": 2024,
+"hip_total_eur": 188500000
+},
+{
+"hip": "-AF",
+"hip_name": "West and Central Africa",
+"year": 2024,
+"hip_total_eur": 302516309
+},
+{
+"hip": "YEM",
+"hip_name": "Yemen",
+"year": 2024,
+"hip_total_eur": 126644381
+},
+{
+"hip": "-AS",
+"hip_name": "Afghanistan, Pakistan, Iran",
+"year": 2025,
+"hip_total_eur": 184038400
+},
+{
+"hip": "COD",
+"hip_name": "Great Lakes",
+"year": 2025,
+"hip_total_eur": 118600000
+},
+{
+"hip": "-HF",
+"hip_name": "Greater Horn of Africa",
+"year": 2025,
+"hip_total_eur": 445500000
+},
+{
+"hip": "-AM",
+"hip_name": "Latin America and Caribbean",
+"year": 2025,
+"hip_total_eur": 153720753
+},
+{
+"hip": "-NF",
+"hip_name": "North Africa",
+"year": 2025,
+"hip_total_eur": 20000000
+},
+{
+"hip": "PSE",
+"hip_name": "Palestine",
+"year": 2025,
+"hip_total_eur": 219919017
+},
+{
+"hip": "-RN",
+"hip_name": "Regional – Protect Aid Workers",
+"year": 2025,
+"hip_total_eur": 4651488
+},
+{
+"hip": "RLF",
+"hip_name": "ReliefEU",
+"year": 2025,
+"hip_total_eur": 110306689
+},
+{
+"hip": "-XA",
+"hip_name": "South, East, SE Asia and Pacific",
+"year": 2025,
+"hip_total_eur": 103317900
+},
+{
+"hip": "-SF",
+"hip_name": "Southern Africa and Indian Ocean",
+"year": 2025,
+"hip_total_eur": 39000000
+},
+{
+"hip": "SSC",
+"hip_name": "Strategic supply chain",
+"year": 2025,
+"hip_total_eur": 12056000
+},
+{
+"hip": "ERC",
+"hip_name": "Strategic Priorities / Enhanced Response Capacity",
+"year": 2025,
+"hip_total_eur": 107920000
+},
+{
+"hip": "SYR",
+"hip_name": "Syria regional and Lebanon",
+"year": 2025,
+"hip_total_eur": 308000000
+},
+{
+"hip": "TUR",
+"hip_name": "Türkiye, Caucasus, C. Asia, Balkans",
+"year": 2025,
+"hip_total_eur": 26000000
+},
+{
+"hip": "UKR",
+"hip_name": "Ukraine and Moldova",
+"year": 2025,
+"hip_total_eur": 229500000
+},
+{
+"hip": "-AF",
+"hip_name": "West and Central Africa",
+"year": 2025,
+"hip_total_eur": 277432319
+},
+{
+"hip": "YEM",
+"hip_name": "Yemen",
+"year": 2025,
+"hip_total_eur": 120000000
+},
+{
+"hip": "-AS",
+"hip_name": "Afghanistan, Pakistan, Iran",
+"year": 2026,
+"hip_total_eur": 184000000
+},
+{
+"hip": "COD",
+"hip_name": "Great Lakes",
+"year": 2026,
+"hip_total_eur": 101400000
+},
+{
+"hip": "-HF",
+"hip_name": "Greater Horn of Africa",
+"year": 2026,
+"hip_total_eur": 419500000
+},
+{
+"hip": "-AM",
+"hip_name": "Latin America and Caribbean",
+"year": 2026,
+"hip_total_eur": 144007988
+},
+{
+"hip": "-NF",
+"hip_name": "North Africa",
+"year": 2026,
+"hip_total_eur": 22631505
+},
+{
+"hip": "PSE",
+"hip_name": "Palestine",
+"year": 2026,
+"hip_total_eur": 219368000
+},
+{
+"hip": "-RN",
+"hip_name": "Regional – Protect Aid Workers",
+"year": 2026,
+"hip_total_eur": 3500000
+},
+{
+"hip": "RLF",
+"hip_name": "ReliefEU",
+"year": 2026,
+"hip_total_eur": 125000000
+},
+{
+"hip": "-XA",
+"hip_name": "South, East, SE Asia and Pacific",
+"year": 2026,
+"hip_total_eur": 85390555
+},
+{
+"hip": "-SF",
+"hip_name": "Southern Africa and Indian Ocean",
+"year": 2026,
+"hip_total_eur": 36000000
+},
+{
+"hip": "SSC",
+"hip_name": "Strategic supply chain",
+"year": 2026,
+"hip_total_eur": 10672000
+},
+{
+"hip": "ERC",
+"hip_name": "Strategic Priorities / Enhanced Response Capacity",
+"year": 2026,
+"hip_total_eur": 84930000
+},
+{
+"hip": "SYR",
+"hip_name": "Syria regional and Lebanon",
+"year": 2026,
+"hip_total_eur": 330760000
+},
+{
+"hip": "TUR",
+"hip_name": "Türkiye, Caucasus, C. Asia, Balkans",
+"year": 2026,
+"hip_total_eur": 1000000
+},
+{
+"hip": "UKR",
+"hip_name": "Ukraine and Moldova",
+"year": 2026,
+"hip_total_eur": 248000000
+},
+{
+"hip": "-AF",
+"hip_name": "West and Central Africa",
+"year": 2026,
+"hip_total_eur": 276000000
+},
+{
+"hip": "YEM",
+"hip_name": "Yemen",
+"year": 2026,
+"hip_total_eur": 85000000
+},
+{
+"hip": "IRQ",
+"hip_name": "Iraq",
+"year": 2025,
+"hip_total_eur": 20000000
+},
+{
+"hip": "IRQ",
+"hip_name": "Iraq",
+"year": 2026,
+"hip_total_eur": 12000000
+}
+]
