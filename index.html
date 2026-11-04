@@ -44,7 +44,18 @@ table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-
 thead { position: sticky; top: 0; z-index: 2; }
 th { background: var(--blue); color: #fff; text-align: left; padding: 4px 6px; vertical-align: bottom; }
 tr.frow th { background: #dbe9f6; padding: 3px 4px; vertical-align: top; }
-tr.frow input, tr.frow select { width: 100%; min-width: 5.5rem; font: inherit; font-size: 12px; color: var(--fg); background: #fff; border: 1px solid #9fc3e3; border-radius: 3px; padding: 2px 4px; }
+.ms-btn { width: 100%; min-width: 6.5rem; max-width: 16rem; text-align: left; font: inherit; font-size: 12px; font-weight: 400; color: var(--fg); background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%230071BC'/%3E%3C/svg%3E") no-repeat right 6px center; border: 1px solid #9fc3e3; border-radius: 3px; padding: 2px 20px 2px 6px; position: relative; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: none; letter-spacing: 0; }
+.ms-btn.on { border-color: var(--red); color: var(--red); font-weight: 700; }
+.filters .ms-btn { font-size: 13px; min-width: 18rem; max-width: 24rem; padding: 4px 20px 4px 8px; border-color: var(--line); }
+.ms-panel { position: fixed; z-index: 20; width: 280px; max-width: calc(100vw - 16px); background: #fff; color: var(--fg); border: 1px solid var(--line); border-top: 3px solid var(--blue); border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,.18); padding: 6px; font-size: 12.5px; }
+.ms-panel input[type=search] { width: 100%; font: inherit; border: 1px solid var(--line); border-radius: 3px; padding: 3px 6px; }
+.ms-act { display: flex; justify-content: space-between; gap: 8px; margin: 4px 0; }
+.ms-act button { all: unset; cursor: pointer; color: var(--blue); font-weight: 700; font-size: 12px; }
+.ms-list { max-height: 280px; overflow: auto; border-top: 1px solid var(--line); padding-top: 2px; }
+.ms-list label { display: flex; gap: 6px; align-items: flex-start; padding: 2px 3px; cursor: pointer; border-radius: 3px; }
+.ms-list label:hover { background: #eef5fb; }
+.ms-list input { margin: 2px 0 0; accent-color: var(--blue); }
+.filters .flab { display: grid; gap: 2px; font-size: 12px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .04em; }
 td.sec, td.ctry { cursor: help; text-decoration: underline dotted #9fb0c3; text-underline-offset: 2px; }
 .pop { position: fixed; pointer-events: none; z-index: 10; background: #fff; border: 1px solid var(--line); border-top: 3px solid var(--blue); border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,.18); padding: 8px 10px; max-width: calc(100vw - 16px); }
 .pop h3 { margin: 0; font-size: 13px; color: var(--fg); }
@@ -77,7 +88,7 @@ a { color: var(--blue); }
   </header>
 
   <div class="filters">
-    <label>HIP <select id="f-hip"></select></label>
+    <div class="flab"><span>HIP (tick one or more)</span><div id="f-hip"></div></div>
     <label>Years funded <select id="f-min"><option value="1">Any</option><option value="2">2 or 3 of 3 years</option><option value="3">All 3 years</option></select></label>
     <button id="reset" type="button">Reset</button>
   </div>
@@ -105,12 +116,11 @@ a { color: var(--blue); }
 
   <section class="card">
     <h2>Who ECHO funds, and how consistently</h2>
-    <p class="note">One row per partner organisation (national affiliates grouped, e.g. ACF France and ACF Spain). Amounts are ECHO commitments under the selected HIP, newest year first. Filter with the boxes under each heading. Hover over sector tags for a value chart.</p>
+    <p class="note">One row per partner organisation (national affiliates grouped, e.g. ACF France and ACF Spain). Amounts are ECHO commitments under the selected HIP, newest year first. Filter with the drop-downs under each heading; tick as many values as you like. Hover over sector tags for a value chart.</p>
     <div class="tablebar">
       <span class="note"><span id="t-count">–</span> partners shown · <a href="data/grants.json" download>Download grant data (JSON)</a></span>
     </div>
     <div class="tablewrap"><table><thead><tr id="thead"></tr><tr class="frow" id="frow"></tr></thead><tbody id="tbody"></tbody></table></div>
-    <datalist id="dl-sec"></datalist><datalist id="dl-ctry"></datalist>
     <div class="pop" id="pop" hidden></div>
   </section>
 
@@ -135,17 +145,60 @@ const num = d3.format(',');
 const pct = d3.format('.0%');
 const BLUE = '#0071BC', RED = '#C41E3A', GREY = '#c9d1db';
 const YEAR_COLS = ['#7fb3dd', '#2f8fd0', '#004f85'];
-const state = {hip: '-AF', min: 1, sort: {key: 'total', dir: -1}, f: {family: '', type: '', sectors: '', countries: ''}};
+const state = {hips: new Set(['-AF']), min: 1, sort: {key: 'total', dir: -1}, f: {family: new Set(), type: new Set(), sectors: new Set(), countries: new Set()}};
+const MS = {};
+const inHip = (g) => state.hips.size === 0 || state.hips.has(g.hip);
 let G = [], T = [], C = {}, YEARS = [], P = [];
 const iso3 = (c) => (C[c] ? C[c].a3 : c);
 const cname = (c) => (C[c] ? C[c].name : c);
 
-function partnersFor(hip) {
+function MultiSelect(host, {all, onChange}) {
+  const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'ms-btn';
+  host.replaceChildren(btn);
+  const panel = document.createElement('div'); panel.className = 'ms-panel'; panel.hidden = true;
+  const search = document.createElement('input'); search.type = 'search'; search.placeholder = 'Search…';
+  const act = document.createElement('div'); act.className = 'ms-act';
+  const bShown = document.createElement('button'); bShown.type = 'button'; bShown.textContent = 'Tick all shown';
+  const bClear = document.createElement('button'); bClear.type = 'button'; bClear.textContent = 'Clear';
+  act.append(bShown, bClear);
+  const list = document.createElement('div'); list.className = 'ms-list';
+  panel.append(search, act, list); document.body.appendChild(panel);
+  let opts = [], sel = new Set();
+  const shown = () => { const q = search.value.trim().toLowerCase(); return opts.filter((o) => !q || o.label.toLowerCase().includes(q)); };
+  const label = () => (sel.size === 0 ? all : sel.size === 1 ? (opts.find((o) => o.value === [...sel][0]) || {label: [...sel][0]}).label : `${sel.size} selected`);
+  const sync = () => { btn.textContent = label(); btn.classList.toggle('on', sel.size > 0); btn.title = sel.size ? opts.filter((o) => sel.has(o.value)).map((o) => o.label).join('; ') : ''; };
+  const draw = () => {
+    list.replaceChildren(...shown().map((o) => {
+      const l = document.createElement('label'); const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = sel.has(o.value);
+      cb.onchange = () => { if (cb.checked) sel.add(o.value); else sel.delete(o.value); sync(); onChange(new Set(sel)); };
+      const t = document.createElement('span'); t.textContent = o.label; l.append(cb, t); return l;
+    }));
+    sync();
+  };
+  search.oninput = draw;
+  bShown.onclick = () => { shown().forEach((o) => sel.add(o.value)); draw(); onChange(new Set(sel)); };
+  bClear.onclick = () => { sel.clear(); draw(); onChange(new Set(sel)); };
+  const place = () => { const r = btn.getBoundingClientRect(); panel.style.left = Math.max(8, Math.min(r.left, window.innerWidth - panel.offsetWidth - 8)) + 'px'; panel.style.top = (r.bottom + 2) + 'px'; };
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    const open = panel.hidden; document.querySelectorAll('.ms-panel').forEach((p) => { p.hidden = true; });
+    if (open) { panel.hidden = false; search.value = ''; draw(); place(); search.focus(); }
+  };
+  document.addEventListener('click', (e) => { if (!panel.contains(e.target)) panel.hidden = true; });
+  window.addEventListener('scroll', (e) => { if (!panel.hidden && !panel.contains(e.target)) place(); }, true);
+  window.addEventListener('resize', () => { if (!panel.hidden) place(); });
+  return {
+    setOptions(o) { opts = o; const valid = new Set(o.map((x) => x.value)); [...sel].forEach((v) => { if (!valid.has(v)) sel.delete(v); }); if (!panel.hidden) draw(); else sync(); return new Set(sel); },
+    setSelected(v) { sel = new Set(v); sync(); },
+  };
+}
+
+function partnersFor() {
   const allH = new Map(), acc = new Map();
   for (const g of G) {
     if (!allH.has(g.family)) allH.set(g.family, new Set());
     allH.get(g.family).add(g.hip_name);
-    if (hip !== 'ALL' && g.hip !== hip) continue;
+    if (!inHip(g)) continue;
     if (!acc.has(g.family)) acc.set(g.family, {family: g.family, type: g.category, byYear: {}, total: 0, grants: 0, sec: {}, secVal: {}, cs: new Set()});
     const r = acc.get(g.family);
     r.byYear[g.year] = (r.byYear[g.year] || 0) + g.eur; r.total += g.eur; r.grants += 1;
@@ -166,9 +219,9 @@ function partnersFor(hip) {
   });
 }
 
-function coverage(hip) {
+function coverage() {
   return YEARS.map((y) => {
-    const tot = T.filter((t) => t.year === y && (hip === 'ALL' || t.hip === hip));
+    const tot = T.filter((t) => t.year === y && (state.hips.size === 0 || state.hips.has(t.hip)));
     const codes = new Set(tot.map((t) => t.hip));
     const iati = d3.sum(G.filter((g) => g.year === y && codes.has(g.hip)), (g) => g.eur);
     const budget = d3.sum(tot, (t) => t.hip_total_eur);
@@ -177,12 +230,12 @@ function coverage(hip) {
 }
 
 function render() {
-  const hip = state.hip;
-  const hipName = hip === 'ALL' ? 'All HIPs' : (G.find((g) => g.hip === hip) || {}).hip_name || hip;
-  const grants = G.filter((g) => hip === 'ALL' || g.hip === hip);
-  P = partnersFor(hip);
+  const names = [...state.hips].map((h) => (G.find((g) => g.hip === h) || {}).hip_name || h);
+  const hipName = names.length === 0 ? 'All HIPs' : names.length <= 2 ? names.join(' + ') : `${names.length} HIPs combined`;
+  const grants = G.filter(inHip);
+  P = partnersFor();
   const all3 = P.filter((p) => p.years === YEARS.length);
-  const cov = coverage(hip);
+  const cov = coverage();
   const full = cov.slice(0, -1);
   const fb = d3.sum(full, (r) => r.budget);
   const fullShare = fb ? d3.sum(full, (r) => r.iati) / fb : null;
@@ -202,22 +255,23 @@ function render() {
 }
 
 function fillLists() {
+  const fams = P.map((p) => p.family).sort((a, b) => a.localeCompare(b));
+  state.f.family = MS.family.setOptions(fams.map((f) => ({value: f, label: f})));
+  const types = [...new Set(P.map((p) => p.type))].sort();
+  state.f.type = MS.type.setOptions(types.map((t) => ({value: t, label: t === 'Redacted' ? 'Name redacted by ECHO' : t})));
   const secs = [...new Set(P.flatMap((p) => p.sectors.split(', ').filter(Boolean)))].sort();
-  document.getElementById('dl-sec').replaceChildren(...secs.map((s) => new Option(s)));
+  state.f.sectors = MS.sectors.setOptions(secs.map((s) => ({value: s, label: s})));
   const cs = [...new Set(P.flatMap((p) => p.codes))].sort((a, b) => cname(a).localeCompare(cname(b)));
-  document.getElementById('dl-ctry').replaceChildren(...cs.map((c) => new Option(`${cname(c)} (${iso3(c)})`)));
+  state.f.countries = MS.countries.setOptions(cs.map((c) => ({value: c, label: `${cname(c)} (${iso3(c)})`})));
 }
 
 function matches(p) {
-  const f = state.f, has = (hay, q) => hay.toLowerCase().includes(q.trim().toLowerCase());
+  const f = state.f;
   if (p.years < state.min) return false;
-  if (f.family && !has(p.family, f.family)) return false;
-  if (f.type && p.type !== f.type) return false;
-  if (f.sectors && !has(p.sectors, f.sectors)) return false;
-  if (f.countries) {
-    const exact = f.countries.match(/\(([A-Z]{3})\)\s*$/);
-    if (exact ? !p.codes.some((c) => iso3(c) === exact[1]) : !p.codes.some((c) => has(cname(c), f.countries) || has(iso3(c), f.countries))) return false;
-  }
+  if (f.family.size && !f.family.has(p.family)) return false;
+  if (f.type.size && !f.type.has(p.type)) return false;
+  if (f.sectors.size && !p.sectors.split(', ').some((s) => f.sectors.has(s))) return false;
+  if (f.countries.size && !p.codes.some((c) => f.countries.has(c))) return false;
   return true;
 }
 
@@ -275,19 +329,11 @@ function buildHeader() {
   }));
   fr.replaceChildren(...cols.map(([k, , cls, kind]) => {
     const th = document.createElement('th'); if (cls && cls.includes('hide-n')) th.className = 'hide-n';
-    let el = null;
-    if (kind === 'type') {
-      el = document.createElement('select');
-      el.append(new Option('All types', ''), ...['NGO', 'UN / multilateral', 'Red Cross / Red Crescent', 'Redacted'].map((t) => new Option(t === 'Redacted' ? 'Name redacted' : t, t)));
-      el.onchange = () => { state.f.type = el.value; drawTable(); };
-    } else if (kind) {
-      el = document.createElement('input'); el.type = 'search';
-      el.placeholder = kind === 'text' ? 'Search partner' : kind === 'sec' ? 'Filter sector' : 'Country or code';
-      if (kind === 'sec') el.setAttribute('list', 'dl-sec');
-      if (kind === 'ctry') el.setAttribute('list', 'dl-ctry');
-      el.oninput = () => { state.f[k] = el.value; drawTable(); if (k === 'sectors') drawSectors(G.filter((g) => state.hip === 'ALL' || g.hip === state.hip)); };
+    if (kind) {
+      const host = document.createElement('div'); th.appendChild(host);
+      const all = {text: 'All partners', type: 'All types', sec: 'All sectors', ctry: 'All countries'}[kind];
+      MS[k] = MultiSelect(host, {all, onChange: (v) => { state.f[k] = v; drawTable(); if (k === 'sectors') drawSectors(G.filter(inHip)); }});
     }
-    if (el) { el.id = 'flt-' + k; el.setAttribute('aria-label', 'Filter ' + k); th.appendChild(el); }
     return th;
   }));
 }
@@ -366,7 +412,7 @@ function drawSectors(grants) {
     const r = m.get(s); r.grants += 1; r.fams.add(g.family);
   }
   const rows = [...m.values()].sort((a, b) => b.grants - a.grants);
-  const sel = state.f.sectors.trim().toLowerCase();
+  const sel = state.f.sectors;
   const W = el.clientWidth || 360, H = Math.max(110, rows.length * 15 + 6);
   const svg = d3.create('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
   el.replaceChildren(svg.node());
@@ -377,10 +423,10 @@ function drawSectors(grants) {
   const y = d3.scaleBand(rows.map((r) => r.sector), [3, H - 3]).padding(0.2);
   svg.append('g').selectAll('text').data(rows).join('text').attr('x', lw - 6).attr('y', (r) => y(r.sector) + y.bandwidth() / 2).attr('dy', '0.35em').attr('text-anchor', 'end').attr('fill', '#1f2933').text((r) => r.sector);
   svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', lw).attr('y', (r) => y(r.sector)).attr('height', y.bandwidth()).attr('width', (r) => x(r.grants) - lw).attr('rx', 3).style('cursor', 'pointer')
-    .attr('fill', (r) => (!sel ? BLUE : r.sector.toLowerCase().includes(sel) ? RED : GREY))
+    .attr('fill', (r) => (!sel.size ? BLUE : sel.has(r.sector) ? RED : GREY))
     .on('click', (ev, r) => {
-      const inp = document.getElementById('flt-sectors');
-      state.f.sectors = state.f.sectors === r.sector ? '' : r.sector; inp.value = state.f.sectors;
+      const s2 = new Set(state.f.sectors); if (s2.has(r.sector)) s2.delete(r.sector); else s2.add(r.sector);
+      state.f.sectors = s2; MS.sectors.setSelected(s2);
       drawSectors(grants); drawTable();
     })
     .on('mousemove', (ev, r) => showTip(el, ev, [[r.sector], ['Grants', num(r.grants)], ['Partner organisations', num(r.fams.size)]]))
@@ -395,17 +441,18 @@ Promise.all(['data/grants.json', 'data/hip_totals.json', 'data/meta.json', 'data
   YEARS = (meta.years || [...new Set(G.map((x) => x.year))].sort()).map(Number);
   document.getElementById('stamp').textContent = `Data pulled ${meta.pulled}; newest ECHO commitment in IATI ${meta.latest_commitment}.`;
   const hips = d3.rollups(G, (v) => d3.sum(v, (x) => x.eur), (x) => x.hip).sort((a, b) => b[1] - a[1]);
-  const fh = document.getElementById('f-hip');
-  fh.replaceChildren(new Option('All HIPs', 'ALL'), ...hips.map(([h]) => new Option(G.find((x) => x.hip === h).hip_name, h)));
-  const fromHash = new URLSearchParams(location.hash.slice(1)).get('hip');
-  state.hip = fromHash && hips.some(([h]) => h === fromHash) ? fromHash : (hips.some(([h]) => h === '-AF') ? '-AF' : 'ALL');
-  fh.value = state.hip;
-  fh.onchange = () => { state.hip = fh.value; history.replaceState(null, '', '#hip=' + encodeURIComponent(state.hip)); render(); };
+  const hipOpts = hips.map(([h]) => ({value: h, label: G.find((x) => x.hip === h).hip_name}));
+  const fromHash = (new URLSearchParams(location.hash.slice(1)).get('hip') || '').split(',').filter((h) => hips.some(([x]) => x === h));
+  state.hips = new Set(fromHash.length ? fromHash : (hips.some(([h]) => h === '-AF') ? ['-AF'] : []));
+  MS.hip = MultiSelect(document.getElementById('f-hip'), {all: 'All HIPs', onChange: (v) => {
+    state.hips = v; history.replaceState(null, '', v.size ? '#hip=' + [...v].map(encodeURIComponent).join(',') : '#'); render();
+  }});
+  MS.hip.setOptions(hipOpts); MS.hip.setSelected(state.hips);
   document.getElementById('f-min').onchange = (e) => { state.min = Number(e.target.value); drawTable(); };
   document.getElementById('reset').onclick = () => {
-    state.min = 1; state.f = {family: '', type: '', sectors: '', countries: ''};
+    state.min = 1; state.f = {family: new Set(), type: new Set(), sectors: new Set(), countries: new Set()};
     document.getElementById('f-min').value = '1';
-    document.querySelectorAll('#frow input, #frow select').forEach((el) => { el.value = ''; });
+    ['family', 'type', 'sectors', 'countries'].forEach((k) => MS[k].setSelected(new Set()));
     render();
   };
   buildHeader(); render();
