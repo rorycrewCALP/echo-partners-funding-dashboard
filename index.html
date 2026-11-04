@@ -21,7 +21,8 @@ p { margin: 0; }
 h2 { font-size: 14px; color: var(--blue); margin: 0 0 2px; }
 .note { color: var(--muted); font-size: 12px; }
 .filters { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: end; padding: 8px 10px; background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 6px; }
-.filters label { display: grid; gap: 1px; font-size: 12px; color: var(--muted); }
+.filters label { display: grid; gap: 2px; font-size: 12px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .04em; }
+.filters label select { text-transform: none; letter-spacing: 0; font-weight: 400; }
 .filters select, .filters button, .tablebar input { font: inherit; font-size: 13px; color: var(--fg); background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; max-width: 100%; }
 .filters button { cursor: pointer; border-color: var(--red); color: var(--red); font-weight: 700; }
 .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); gap: 8px; }
@@ -40,7 +41,15 @@ h2 { font-size: 14px; color: var(--blue); margin: 0 0 2px; }
 .tablebar input { min-width: min(100%, 16rem); }
 .tablewrap { max-height: 560px; overflow: auto; border: 1px solid var(--line); border-radius: 4px; }
 table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
-th { position: sticky; top: 0; background: var(--blue); color: #fff; text-align: left; padding: 4px 6px; vertical-align: bottom; z-index: 1; }
+thead { position: sticky; top: 0; z-index: 2; }
+th { background: var(--blue); color: #fff; text-align: left; padding: 4px 6px; vertical-align: bottom; }
+tr.frow th { background: #dbe9f6; padding: 3px 4px; vertical-align: top; }
+tr.frow input, tr.frow select { width: 100%; min-width: 5.5rem; font: inherit; font-size: 12px; color: var(--fg); background: #fff; border: 1px solid #9fc3e3; border-radius: 3px; padding: 2px 4px; }
+td.sec, td.ctry { cursor: help; text-decoration: underline dotted #9fb0c3; text-underline-offset: 2px; }
+.pop { position: fixed; pointer-events: none; z-index: 10; background: #fff; border: 1px solid var(--line); border-top: 3px solid var(--blue); border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,.18); padding: 8px 10px; max-width: calc(100vw - 16px); }
+.pop h3 { margin: 0; font-size: 13px; color: var(--fg); }
+.pop .note { margin: 1px 0 4px; }
+.pop svg text { font-family: inherit; font-size: 11px; }
 th button { all: unset; cursor: pointer; font-weight: 700; }
 th[aria-sort="descending"] button::after { content: " ↓"; }
 th[aria-sort="ascending"] button::after { content: " ↑"; }
@@ -69,8 +78,6 @@ a { color: var(--blue); }
 
   <div class="filters">
     <label>HIP <select id="f-hip"></select></label>
-    <label>Partner type <select id="f-cat"><option value="">All types</option><option>NGO</option><option>UN / multilateral</option><option>Red Cross / Red Crescent</option><option value="Redacted">Name redacted by ECHO</option></select></label>
-    <label>Sector tag <select id="f-sector"><option value="">All sector tags</option></select></label>
     <label>Years funded <select id="f-min"><option value="1">Any</option><option value="2">2 or 3 of 3 years</option><option value="3">All 3 years</option></select></label>
     <button id="reset" type="button">Reset</button>
   </div>
@@ -98,12 +105,13 @@ a { color: var(--blue); }
 
   <section class="card">
     <h2>Who ECHO funds, and how consistently</h2>
-    <p class="note">One row per partner organisation (national affiliates grouped, e.g. ACF France and ACF Spain). Amounts are ECHO commitments under the selected HIP. Type, sector and years filters apply here.</p>
+    <p class="note">One row per partner organisation (national affiliates grouped, e.g. ACF France and ACF Spain). Amounts are ECHO commitments under the selected HIP, newest year first. Filter with the boxes under each heading. Hover over sector tags for a value chart, and over countries for full names.</p>
     <div class="tablebar">
       <span class="note"><span id="t-count">–</span> partners shown · <a href="data/grants.json" download>Download grant data (JSON)</a></span>
-      <input id="search" type="search" placeholder="Search partner, sector or country" aria-label="Search partners">
     </div>
-    <div class="tablewrap"><table><thead><tr id="thead"></tr></thead><tbody id="tbody"></tbody></table></div>
+    <div class="tablewrap"><table><thead><tr id="thead"></tr><tr class="frow" id="frow"></tr></thead><tbody id="tbody"></tbody></table></div>
+    <datalist id="dl-sec"></datalist><datalist id="dl-ctry"></datalist>
+    <div class="pop" id="pop" hidden></div>
   </section>
 
   <section class="card">
@@ -113,7 +121,8 @@ a { color: var(--blue); }
       <li>Refreshed automatically on the 3rd of each month by a GitHub Action. ECHO publishes commitments at signature only, no disbursements, and its feed lags by months, so the latest year is always incomplete.</li>
       <li>Coverage varies a lot by HIP: some show almost the whole budget, others under half. Missing money is most likely larger UN and programmatic-partnership grants, but the data doesn't say.</li>
       <li>Partners are ECHO's direct partners; sub-grantees and local partners are not published. Some partner names are redacted by ECHO. Affiliates are grouped by name matching, so check unusual cases.</li>
-      <li>Sector tags are ECHO's own (vocabulary 98), counted per grant, not split by value. Prepared for CALP Network.</li>
+      <li>Sector tags are ECHO's own (vocabulary 98). ECHO doesn't split a grant's value between its tags, so in the sector hover chart a grant with several tags counts in full under each: values by tag don't add up to the partner's total.</li>
+      <li>Countries use ISO 3166-1 three-letter codes. Prepared for CALP Network.</li>
     </ul>
     </details>
   </section>
@@ -125,8 +134,11 @@ const eur = (v) => (v ? '€' + eurFmt.format(v) : '–');
 const num = d3.format(',');
 const pct = d3.format('.0%');
 const BLUE = '#0071BC', RED = '#C41E3A', GREY = '#c9d1db';
-const state = {hip: '-AF', cat: '', sector: '', min: 1, q: '', sort: {key: 'total', dir: -1}};
-let G = [], T = [], META = {}, YEARS = [], P = [];
+const YEAR_COLS = ['#7fb3dd', '#2f8fd0', '#004f85'];
+const state = {hip: '-AF', min: 1, sort: {key: 'total', dir: -1}, f: {family: '', type: '', sectors: '', countries: ''}};
+let G = [], T = [], C = {}, YEARS = [], P = [];
+const iso3 = (c) => (C[c] ? C[c].a3 : c);
+const cname = (c) => (C[c] ? C[c].name : c);
 
 function partnersFor(hip) {
   const allH = new Map(), acc = new Map();
@@ -134,29 +146,34 @@ function partnersFor(hip) {
     if (!allH.has(g.family)) allH.set(g.family, new Set());
     allH.get(g.family).add(g.hip_name);
     if (hip !== 'ALL' && g.hip !== hip) continue;
-    if (!acc.has(g.family)) acc.set(g.family, {family: g.family, type: g.category, byYear: {}, total: 0, grants: 0, sec: {}, cs: new Set()});
+    if (!acc.has(g.family)) acc.set(g.family, {family: g.family, type: g.category, byYear: {}, total: 0, grants: 0, sec: {}, secVal: {}, cs: new Set()});
     const r = acc.get(g.family);
     r.byYear[g.year] = (r.byYear[g.year] || 0) + g.eur; r.total += g.eur; r.grants += 1;
     g.countries.split(',').filter(Boolean).forEach((c) => r.cs.add(c));
-    g.sectors.split('|').filter(Boolean).forEach((s) => { r.sec[s] = (r.sec[s] || 0) + 1; });
+    g.sectors.split('|').filter(Boolean).forEach((s) => {
+      r.sec[s] = (r.sec[s] || 0) + 1;
+      if (!r.secVal[s]) r.secVal[s] = {all: 0};
+      r.secVal[s].all += g.eur; r.secVal[s][g.year] = (r.secVal[s][g.year] || 0) + g.eur;
+    });
   }
   return [...acc.values()].map((r) => {
     const ys = YEARS.filter((y) => r.byYear[y]);
-    return {...r, years: ys.length, years_list: ys.join(', '),
+    const codes = [...r.cs].sort((a, b) => iso3(a).localeCompare(iso3(b)));
+    return {...r, years: ys.length, years_list: [...ys].reverse().join(', '),
       sectors: Object.entries(r.sec).sort((a, b) => b[1] - a[1]).map((x) => x[0]).join(', '),
-      countries: [...r.cs].sort().join(', '), all_hips: [...allH.get(r.family)].sort().join('; ')};
+      codes, countries: codes.map(iso3).join(', '), country_names: codes.map(cname).join(', '),
+      all_hips: [...allH.get(r.family)].sort().join('; ')};
   });
 }
 
 function coverage(hip) {
-  const rows = YEARS.map((y) => {
+  return YEARS.map((y) => {
     const tot = T.filter((t) => t.year === y && (hip === 'ALL' || t.hip === hip));
     const codes = new Set(tot.map((t) => t.hip));
     const iati = d3.sum(G.filter((g) => g.year === y && codes.has(g.hip)), (g) => g.eur);
     const budget = d3.sum(tot, (t) => t.hip_total_eur);
     return {year: y, iati, budget, share: budget ? iati / budget : null};
   });
-  return rows;
 }
 
 function render() {
@@ -167,8 +184,8 @@ function render() {
   const all3 = P.filter((p) => p.years === YEARS.length);
   const cov = coverage(hip);
   const full = cov.slice(0, -1);
-  const fullShare = d3.sum(full, (r) => r.budget) ? d3.sum(full, (r) => r.iati) / d3.sum(full, (r) => r.budget) : null;
-
+  const fb = d3.sum(full, (r) => r.budget);
+  const fullShare = fb ? d3.sum(full, (r) => r.iati) / fb : null;
   const top = all3.filter((p) => p.type !== 'Redacted').sort((a, b) => b.total - a.total).slice(0, 5);
   document.getElementById('take').textContent = `${hipName}: ${num(all3.length)} of ${num(P.length)} partner organisations received ECHO grants in all three years (${YEARS[0]}–${YEARS[YEARS.length - 1]}). ` +
     (top.length ? `Largest of these: ${top.map((p) => `${p.family} (${eur(p.total)})`).join(', ')}.` : 'None yet – the latest year may not be published.');
@@ -178,37 +195,58 @@ function render() {
   document.getElementById('k-eur').textContent = eur(d3.sum(grants, (g) => g.eur));
   document.getElementById('k-cov-lab').textContent = `Share of HIP budget visible, ${full[0].year}–${full[full.length - 1].year}`;
   document.getElementById('k-cov').textContent = fullShare == null ? '–' : pct(fullShare);
-
+  fillLists();
   drawCoverage(cov);
   drawSectors(grants);
   drawTable();
 }
 
+function fillLists() {
+  const secs = [...new Set(P.flatMap((p) => p.sectors.split(', ').filter(Boolean)))].sort();
+  document.getElementById('dl-sec').replaceChildren(...secs.map((s) => new Option(s)));
+  const cs = [...new Set(P.flatMap((p) => p.codes))].sort((a, b) => cname(a).localeCompare(cname(b)));
+  document.getElementById('dl-ctry').replaceChildren(...cs.map((c) => new Option(`${cname(c)} (${iso3(c)})`)));
+}
+
+function matches(p) {
+  const f = state.f, has = (hay, q) => hay.toLowerCase().includes(q.trim().toLowerCase());
+  if (p.years < state.min) return false;
+  if (f.family && !has(p.family, f.family)) return false;
+  if (f.type && p.type !== f.type) return false;
+  if (f.sectors && !has(p.sectors, f.sectors)) return false;
+  if (f.countries) {
+    const exact = f.countries.match(/\(([A-Z]{3})\)\s*$/);
+    if (exact ? !p.codes.some((c) => iso3(c) === exact[1]) : !p.codes.some((c) => has(cname(c), f.countries) || has(iso3(c), f.countries))) return false;
+  }
+  return true;
+}
+
 function drawTable() {
-  const q = state.q.trim().toLowerCase();
   const {key, dir} = state.sort;
-  const rows = P.filter((p) => (!state.cat || p.type === state.cat) && p.years >= state.min && (!state.sector || p.sectors.split(', ').includes(state.sector)))
-    .filter((p) => !q || [p.family, p.sectors, p.countries, p.all_hips, p.type].join(' ').toLowerCase().includes(q))
-    .sort((a, b) => {
-      const x = key.startsWith('y') ? (a.byYear[key.slice(1)] || 0) : a[key], y = key.startsWith('y') ? (b.byYear[key.slice(1)] || 0) : b[key];
-      return (typeof x === 'number' ? x - y : String(x).localeCompare(String(y))) * dir;
-    });
+  const val = (p, k) => (k.startsWith('y') ? (p.byYear[k.slice(1)] || 0) : p[k]);
+  const rows = P.filter(matches).sort((a, b) => {
+    const x = val(a, key), y = val(b, key);
+    return (typeof x === 'number' ? x - y : String(x).localeCompare(String(y))) * dir;
+  });
   document.getElementById('t-count').textContent = num(rows.length);
   const max = d3.max(rows, (r) => r.total) || 1;
-  const tb = document.getElementById('tbody');
-  tb.replaceChildren(...rows.map((p) => {
+  const yearsDesc = [...YEARS].reverse();
+  document.getElementById('tbody').replaceChildren(...rows.map((p) => {
     const tr = document.createElement('tr');
     const td = (text, cls) => { const c = document.createElement('td'); if (cls) c.className = cls; c.textContent = text; tr.appendChild(c); return c; };
     td(p.family, 'fam'); td(p.type, 'hide-n'); td(p.years_list);
-    YEARS.forEach((y) => td(eur(p.byYear[y]), 'n'));
+    yearsDesc.forEach((y) => td(eur(p.byYear[y]), 'n'));
     const t = td(eur(p.total), 'n');
     const bar = document.createElement('span'); bar.className = 'bar';
     const fill = document.createElement('span'); fill.style.width = (100 * p.total / max).toFixed(1) + '%';
     bar.appendChild(fill); t.appendChild(bar);
     td(num(p.grants), 'n hide-n');
     const secs = p.sectors.split(', ').filter(Boolean);
-    const sc = td(secs.slice(0, 4).join(', ') + (secs.length > 4 ? ` +${secs.length - 4}` : ''), 'wrap'); sc.title = p.sectors;
-    td(p.countries, 'hide-n');
+    const sc = td(secs.slice(0, 4).join(', ') + (secs.length > 4 ? ` +${secs.length - 4}` : ''), 'wrap sec');
+    sc.addEventListener('mouseenter', (ev) => showSectorPop(p, ev));
+    sc.addEventListener('mousemove', placePop);
+    sc.addEventListener('mouseleave', hidePop);
+    const cc = td(p.countries, 'hide-n ctry'); cc.title = p.country_names;
     const hs = p.all_hips.split('; ').filter(Boolean);
     const hc = td(hs.length === 1 ? hs[0] : `${hs.length} HIPs`, 'hide-n'); hc.title = p.all_hips; hc.style.cursor = 'help';
     return tr;
@@ -217,11 +255,11 @@ function drawTable() {
 
 function buildHeader() {
   const latest = YEARS[YEARS.length - 1];
-  const cols = [['family', 'Partner'], ['type', 'Type', 'hide-n'], ['years', 'Years funded'],
-    ...YEARS.map((y) => ['y' + y, y === latest ? `${y} (partial)` : String(y), 'n']),
-    ['total', 'Total', 'n'], ['grants', 'Grants', 'n hide-n'], ['sectors', 'Top sector tags', 'wrap'],
-    ['countries', 'Countries', 'hide-n'], ['all_hips', 'HIPs funded under (hover)', 'hide-n']];
-  const tr = document.getElementById('thead');
+  const cols = [['family', 'Partner', '', 'text'], ['type', 'Type', 'hide-n', 'type'], ['years', 'Years funded'],
+    ...[...YEARS].reverse().map((y) => ['y' + y, y === latest ? `${y} (partial)` : String(y), 'n']),
+    ['total', 'Total', 'n'], ['grants', 'Grants', 'n hide-n'], ['sectors', 'Top sector tags', 'wrap', 'sec'],
+    ['countries', 'Countries', 'hide-n', 'ctry'], ['all_hips', 'HIPs funded under', 'hide-n']];
+  const tr = document.getElementById('thead'), fr = document.getElementById('frow');
   tr.replaceChildren(...cols.map(([k, label, cls]) => {
     const th = document.createElement('th'); if (cls) th.className = cls;
     if (k === state.sort.key) th.setAttribute('aria-sort', 'descending');
@@ -235,6 +273,62 @@ function buildHeader() {
     };
     th.appendChild(b); return th;
   }));
+  fr.replaceChildren(...cols.map(([k, , cls, kind]) => {
+    const th = document.createElement('th'); if (cls && cls.includes('hide-n')) th.className = 'hide-n';
+    let el = null;
+    if (kind === 'type') {
+      el = document.createElement('select');
+      el.append(new Option('All types', ''), ...['NGO', 'UN / multilateral', 'Red Cross / Red Crescent', 'Redacted'].map((t) => new Option(t === 'Redacted' ? 'Name redacted' : t, t)));
+      el.onchange = () => { state.f.type = el.value; drawTable(); };
+    } else if (kind) {
+      el = document.createElement('input'); el.type = 'search';
+      el.placeholder = kind === 'text' ? 'Search partner' : kind === 'sec' ? 'Filter sector' : 'Country or code';
+      if (kind === 'sec') el.setAttribute('list', 'dl-sec');
+      if (kind === 'ctry') el.setAttribute('list', 'dl-ctry');
+      el.oninput = () => { state.f[k] = el.value; drawTable(); if (k === 'sectors') drawSectors(G.filter((g) => state.hip === 'ALL' || g.hip === state.hip)); };
+    }
+    if (el) { el.id = 'flt-' + k; el.setAttribute('aria-label', 'Filter ' + k); th.appendChild(el); }
+    return th;
+  }));
+}
+
+const pop = () => document.getElementById('pop');
+function placePop(ev) {
+  const el = pop(); if (el.hidden) return;
+  const w = el.offsetWidth, h = el.offsetHeight;
+  let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + w > window.innerWidth - 8) x = Math.max(8, ev.clientX - w - 14);
+  if (y + h > window.innerHeight - 8) y = Math.max(8, window.innerHeight - h - 8);
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+}
+function hidePop() { pop().hidden = true; }
+function showSectorPop(p, ev) {
+  const el = pop();
+  const rows = Object.entries(p.secVal).map(([s, v]) => ({s, ...v})).sort((a, b) => b.all - a.all);
+  const h3 = document.createElement('h3'); h3.textContent = `${p.family}: value of grants by sector tag`;
+  const note = document.createElement('p'); note.className = 'note';
+  note.textContent = 'A grant with several tags counts in full under each, so bars don’t add up to the total.';
+  const lw = 150, allW = 140, yw = 96, rh = 16, top = 18;
+  const W = lw + allW + 10 + YEARS.length * (yw + 6), H = top + rows.length * rh + 4;
+  const svg = d3.create('svg').attr('width', W).attr('height', H);
+  const xa = d3.scaleLinear([0, d3.max(rows, (r) => r.all) || 1], [0, allW - 46]);
+  const xy = d3.scaleLinear([0, d3.max(rows, (r) => d3.max(YEARS, (y) => r[y] || 0)) || 1], [0, yw - 46]);
+  svg.append('text').attr('x', lw).attr('y', 11).attr('font-weight', 700).attr('fill', BLUE).text('All years');
+  const yearsDesc = [...YEARS].reverse();
+  yearsDesc.forEach((y, i) => svg.append('text').attr('x', lw + allW + 10 + i * (yw + 6)).attr('y', 11).attr('font-weight', 700).attr('fill', '#1f2933').text(y));
+  rows.forEach((r, i) => {
+    const yy = top + i * rh;
+    svg.append('text').attr('x', lw - 6).attr('y', yy + 10).attr('text-anchor', 'end').attr('fill', '#1f2933').text(r.s.length > 26 ? r.s.slice(0, 25) + '…' : r.s);
+    svg.append('rect').attr('x', lw).attr('y', yy + 2).attr('height', rh - 5).attr('width', Math.max(1, xa(r.all))).attr('rx', 2).attr('fill', BLUE);
+    svg.append('text').attr('x', lw + xa(r.all) + 3).attr('y', yy + 10).attr('fill', '#5f6b7a').text(eur(r.all));
+    yearsDesc.forEach((y, j) => {
+      const x0 = lw + allW + 10 + j * (yw + 6), v = r[y] || 0;
+      if (v) svg.append('rect').attr('x', x0).attr('y', yy + 2).attr('height', rh - 5).attr('width', Math.max(1, xy(v))).attr('rx', 2).attr('fill', YEAR_COLS[YEARS.indexOf(y)] || BLUE);
+      svg.append('text').attr('x', x0 + (v ? xy(v) + 3 : 0)).attr('y', yy + 10).attr('fill', '#5f6b7a').text(v ? eur(v) : '–');
+    });
+  });
+  el.replaceChildren(h3, note, svg.node());
+  el.hidden = false; placePop(ev);
 }
 
 function tipFor(el) { let t = el.querySelector('.tip'); if (!t) { t = document.createElement('div'); t.className = 'tip'; t.hidden = true; el.appendChild(t); } return t; }
@@ -272,6 +366,7 @@ function drawSectors(grants) {
     const r = m.get(s); r.grants += 1; r.fams.add(g.family);
   }
   const rows = [...m.values()].sort((a, b) => b.grants - a.grants);
+  const sel = state.f.sectors.trim().toLowerCase();
   const W = el.clientWidth || 360, H = Math.max(110, rows.length * 15 + 6);
   const svg = d3.create('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
   el.replaceChildren(svg.node());
@@ -282,17 +377,22 @@ function drawSectors(grants) {
   const y = d3.scaleBand(rows.map((r) => r.sector), [3, H - 3]).padding(0.2);
   svg.append('g').selectAll('text').data(rows).join('text').attr('x', lw - 6).attr('y', (r) => y(r.sector) + y.bandwidth() / 2).attr('dy', '0.35em').attr('text-anchor', 'end').attr('fill', '#1f2933').text((r) => r.sector);
   svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', lw).attr('y', (r) => y(r.sector)).attr('height', y.bandwidth()).attr('width', (r) => x(r.grants) - lw).attr('rx', 3).style('cursor', 'pointer')
-    .attr('fill', (r) => (!state.sector ? BLUE : r.sector === state.sector ? RED : GREY))
-    .on('click', (ev, r) => { state.sector = state.sector === r.sector ? '' : r.sector; document.getElementById('f-sector').value = state.sector; render(); })
+    .attr('fill', (r) => (!sel ? BLUE : r.sector.toLowerCase().includes(sel) ? RED : GREY))
+    .on('click', (ev, r) => {
+      const inp = document.getElementById('flt-sectors');
+      state.f.sectors = state.f.sectors === r.sector ? '' : r.sector; inp.value = state.f.sectors;
+      drawSectors(grants); drawTable();
+    })
     .on('mousemove', (ev, r) => showTip(el, ev, [[r.sector], ['Grants', num(r.grants)], ['Partner organisations', num(r.fams.size)]]))
     .on('mouseleave', () => { tipFor(el).hidden = true; });
   svg.append('g').selectAll('text.v').data(rows).join('text').attr('x', (r) => x(r.grants) + 4).attr('y', (r) => y(r.sector) + y.bandwidth() / 2).attr('dy', '0.35em').attr('fill', '#5f6b7a').text((r) => num(r.grants));
 }
 
-Promise.all(['data/grants.json', 'data/hip_totals.json', 'data/meta.json'].map((u) => fetch(u).then((r) => r.json()))).then(([g, t, meta]) => {
+Promise.all(['data/grants.json', 'data/hip_totals.json', 'data/meta.json', 'data/countries.json'].map((u) => fetch(u).then((r) => r.json()))).then(([g, t, meta, countries]) => {
+  C = countries;
   G = g.map((x) => ({...x, year: Number(x.year), eur: Number(x.eur), sectors: x.sectors || '', countries: x.countries || ''}));
   T = t.map((x) => ({...x, year: Number(x.year), hip_total_eur: Number(x.hip_total_eur)}));
-  META = meta; YEARS = (meta.years || [...new Set(G.map((x) => x.year))].sort()).map(Number);
+  YEARS = (meta.years || [...new Set(G.map((x) => x.year))].sort()).map(Number);
   document.getElementById('stamp').textContent = `Data pulled ${meta.pulled}; newest ECHO commitment in IATI ${meta.latest_commitment}.`;
   const hips = d3.rollups(G, (v) => d3.sum(v, (x) => x.eur), (x) => x.hip).sort((a, b) => b[1] - a[1]);
   const fh = document.getElementById('f-hip');
@@ -300,17 +400,13 @@ Promise.all(['data/grants.json', 'data/hip_totals.json', 'data/meta.json'].map((
   const fromHash = new URLSearchParams(location.hash.slice(1)).get('hip');
   state.hip = fromHash && hips.some(([h]) => h === fromHash) ? fromHash : (hips.some(([h]) => h === '-AF') ? '-AF' : 'ALL');
   fh.value = state.hip;
-  const secs = d3.rollups(G.flatMap((x) => x.sectors.split('|').filter(Boolean)), (v) => v.length, (s) => s).sort((a, b) => b[1] - a[1]);
-  document.getElementById('f-sector').append(...secs.map(([s]) => new Option(s, s)));
   fh.onchange = () => { state.hip = fh.value; history.replaceState(null, '', '#hip=' + encodeURIComponent(state.hip)); render(); };
-  document.getElementById('f-cat').onchange = (e) => { state.cat = e.target.value; drawTable(); };
-  document.getElementById('f-sector').onchange = (e) => { state.sector = e.target.value; render(); };
   document.getElementById('f-min').onchange = (e) => { state.min = Number(e.target.value); drawTable(); };
-  document.getElementById('search').oninput = (e) => { state.q = e.target.value; drawTable(); };
   document.getElementById('reset').onclick = () => {
-    Object.assign(state, {cat: '', sector: '', min: 1, q: ''});
-    ['f-cat', 'f-sector', 'search'].forEach((id) => { document.getElementById(id).value = ''; });
-    document.getElementById('f-min').value = '1'; render();
+    state.min = 1; state.f = {family: '', type: '', sectors: '', countries: ''};
+    document.getElementById('f-min').value = '1';
+    document.querySelectorAll('#frow input, #frow select').forEach((el) => { el.value = ''; });
+    render();
   };
   buildHeader(); render();
   let w = window.innerWidth; window.addEventListener('resize', () => { if (window.innerWidth !== w) { w = window.innerWidth; render(); } });
