@@ -39,7 +39,7 @@ h2 { font-size: 14px; color: var(--blue); margin: 0 0 2px; }
 .tip .k { color: var(--muted); }
 .tablebar { display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; align-items: center; margin: 4px 0 6px; }
 .tablebar input { min-width: min(100%, 16rem); }
-.tablewrap { max-height: 560px; overflow: auto; border: 1px solid var(--line); border-radius: 4px; }
+.tablewrap { height: 560px; overflow: auto; border: 1px solid var(--line); border-radius: 4px; }
 table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
 thead { position: sticky; top: 0; z-index: 2; }
 th { background: var(--blue); color: #fff; text-align: left; padding: 4px 6px; vertical-align: bottom; }
@@ -105,7 +105,7 @@ a { color: var(--blue); }
 
   <section class="card">
     <h2>Who ECHO funds, and how consistently</h2>
-    <p class="note">One row per partner organisation (national affiliates grouped, e.g. ACF France and ACF Spain). Amounts are ECHO commitments under the selected HIP, newest year first. Filter with the boxes under each heading. Hover over sector tags for a value chart, and over countries for full names.</p>
+    <p class="note">One row per partner organisation (national affiliates grouped, e.g. ACF France and ACF Spain). Amounts are ECHO commitments under the selected HIP, newest year first. Filter with the boxes under each heading. Hover over sector tags for a value chart.</p>
     <div class="tablebar">
       <span class="note"><span id="t-count">–</span> partners shown · <a href="data/grants.json" download>Download grant data (JSON)</a></span>
     </div>
@@ -122,7 +122,7 @@ a { color: var(--blue); }
       <li>Coverage varies a lot by HIP: some show almost the whole budget, others under half. Missing money is most likely larger UN and programmatic-partnership grants, but the data doesn't say.</li>
       <li>Partners are ECHO's direct partners; sub-grantees and local partners are not published. Some partner names are redacted by ECHO. Affiliates are grouped by name matching, so check unusual cases.</li>
       <li>Sector tags are ECHO's own (vocabulary 98). ECHO doesn't split a grant's value between its tags, so in the sector hover chart a grant with several tags counts in full under each: values by tag don't add up to the partner's total.</li>
-      <li>Countries use ISO 3166-1 three-letter codes. Prepared for CALP Network.</li>
+      <li>Country names are shortened where the formal name is long (e.g. DR Congo); country filters also accept ISO codes. Prepared for CALP Network.</li>
     </ul>
     </details>
   </section>
@@ -158,10 +158,10 @@ function partnersFor(hip) {
   }
   return [...acc.values()].map((r) => {
     const ys = YEARS.filter((y) => r.byYear[y]);
-    const codes = [...r.cs].sort((a, b) => iso3(a).localeCompare(iso3(b)));
+    const codes = [...r.cs].sort((a, b) => cname(a).localeCompare(cname(b)));
     return {...r, years: ys.length, years_list: [...ys].reverse().join(', '),
       sectors: Object.entries(r.sec).sort((a, b) => b[1] - a[1]).map((x) => x[0]).join(', '),
-      codes, countries: codes.map(iso3).join(', '), country_names: codes.map(cname).join(', '),
+      codes, countries: codes.map(cname).join(', '), country_codes: codes.map(iso3).join(', '),
       all_hips: [...allH.get(r.family)].sort().join('; ')};
   });
 }
@@ -246,7 +246,7 @@ function drawTable() {
     sc.addEventListener('mouseenter', (ev) => showSectorPop(p, ev));
     sc.addEventListener('mousemove', placePop);
     sc.addEventListener('mouseleave', hidePop);
-    const cc = td(p.countries, 'hide-n ctry'); cc.title = p.country_names;
+    const cc = td(p.countries, 'hide-n wrap'); cc.title = 'ISO codes: ' + p.country_codes;
     const hs = p.all_hips.split('; ').filter(Boolean);
     const hc = td(hs.length === 1 ? hs[0] : `${hs.length} HIPs`, 'hide-n'); hc.title = p.all_hips; hc.style.cursor = 'help';
     return tr;
